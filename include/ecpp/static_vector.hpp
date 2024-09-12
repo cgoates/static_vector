@@ -774,7 +774,19 @@ template <class T, std::size_t N> constexpr bool operator==(static_vector<T, N> 
  * otherwise
  */
 template <class T, std::size_t N> constexpr auto operator<=>(static_vector<T, N> const &lhs, static_vector<T, N> const &rhs) {
-  return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+  auto f1 = lhs.begin();
+  auto l1 = lhs.end();
+  auto f2 = rhs.begin();
+  auto l2 = rhs.end();
+  bool exhaust1 = (f1 == l1);
+  bool exhaust2 = (f2 == l2);
+  for (; !exhaust1 && !exhaust2; exhaust1 = (++f1 == l1), exhaust2 = (++f2 == l2))
+      if (auto c = comp(*f1, *f2); c != 0)
+          return c;
+
+  return !exhaust1 ? std::strong_ordering::greater:
+          !exhaust2 ? std::strong_ordering::less:
+                      std::strong_ordering::equal;
 }
 
 /**
